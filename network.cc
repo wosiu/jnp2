@@ -1,11 +1,10 @@
+#include "network.h"
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
-#include <string>
 #include <tuple>
-#include <iostream>
-#include "network.h"
 
+#include <iostream>
 #include <assert.h>
 
 

@@ -166,5 +166,5 @@ int main()
 	assert(network_nodes_number(n) == 0);
     assert(network_links_number(n) == 0);
 
-    return 0;
+	return 0;
 }
