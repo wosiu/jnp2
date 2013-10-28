@@ -142,9 +142,14 @@ int main()
     assert(network_in_degree(n, "Kabaty") == 1);
     assert(network_out_degree(n, "Pikaczu") == 0);
     assert(network_in_degree(n, "Pikaczu") == 0);
+	assert(network_nodes_number(n) == 5);
+    assert(network_links_number(n) == 2);
 
-    network_delete(n);
+	//dodanie drugiej sieci
+	//TODO
+
 	//sprawdzanie usunietej
+	network_delete(n);
 	assert(network_out_degree(n, "Imielin") == 0);
     assert(network_in_degree(n, "Imielin") == 0);
     assert(network_nodes_number(n) == 0);
@@ -165,6 +170,8 @@ int main()
 	network_remove_node(n, "Mlociny");
 	assert(network_nodes_number(n) == 0);
     assert(network_links_number(n) == 0);
+
+    //druga sieć
 
 	return 0;
 }

@@ -269,7 +269,11 @@ size_t network_out_degree(net_id id, const char* label)
 		return 0;
 	}
 	graph* g = net_graph( nw_it->get_net );
-	nodes* out = &( (*g)[ label ].get_out_links );
+	graph_it_s = g->find( label );
+	if ( graph_it_s == g->end() ) {
+		return 0;
+	}
+	nodes* out = &( graph_it_s->get_node_links.get_out_links );
 	return out->size();
 }
 
@@ -284,7 +288,11 @@ size_t network_in_degree(net_id id, const char* label)
 		return 0;
 	}
 	graph* g = net_graph( nw_it->get_net );
-	nodes* in = &( (*g)[ label ].get_in_links );
+	graph_it_s = g->find( label );
+	if ( graph_it_s == g->end() ) {
+		return 0;
+	}
+	nodes* in = &( graph_it_s->get_node_links.get_in_links );
 	return in->size();
 }
 
