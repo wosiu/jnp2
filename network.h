@@ -5,9 +5,6 @@
 extern "C" {
 #endif
 
-unsigned long test();
-
-void showtime();
 unsigned long network_new(int growing);
 void network_delete(unsigned long id);
 size_t network_nodes_number(unsigned long id);

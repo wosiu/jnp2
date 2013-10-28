@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
-#include "network.h"
-//#include "growingnet.h"
+#include "../network.h"
+#include "../growingnet.h"
 
 int main()
 {
@@ -64,21 +64,18 @@ int main()
     assert(network_in_degree(n, "Kabaty") == 1);
 
     network_clear(n);
-    assert(network_nodes_number(n) == 0);
-    assert(network_links_number(n) == 0);
-    assert(network_out_degree(n, "Kabaty") == 0);
-    assert(network_in_degree(n, "Kabaty") == 0);
 
-	network_add_link(n, "Kabaty", "Kabaty");
-	network_add_link(n, "Kabaty", "Kabaty");
-	network_add_link(n, "Kabaty", "Kabaty");
-	network_add_node(n, "Imielin");
-	network_add_node(n, "Imielin");
-	network_add_node(n, "Imielin");
-    assert(network_nodes_number(n) == 2);
-    assert(network_links_number(n) == 1);
-    assert(network_out_degree(n, "Kabaty") == 1);
-    assert(network_in_degree(n, "Kabaty") == 1);
+    network_add_link(growingnet, "0", "0");
+    assert(network_nodes_number(growingnet) == 1);
+    assert(network_links_number(growingnet) == 1);
+    assert(network_out_degree(growingnet, "0") == 1);
+    assert(network_in_degree(growingnet, "0") == 1);
+
+    network_remove_node(growingnet, "0");
+    assert(network_nodes_number(growingnet) == 1);
+    assert(network_links_number(growingnet) == 1);
+    assert(network_out_degree(growingnet, "0") == 1);
+    assert(network_in_degree(growingnet, "0") == 1);
 
     return 0;
 }

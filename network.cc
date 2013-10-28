@@ -46,8 +46,6 @@ network::iterator nw_it;
 #define memcheck if(debon) {FILE *fp = fopen("/proc/self/status","r");while( !feof(fp) ) putchar(fgetc(fp));}
 
 
-
-
 // funckje pomocnicze (zakladamy poprawnosc argumentow)
 network::iterator get_net( net_id id )
 {
@@ -106,12 +104,6 @@ void net_remove_link( net* nt, const char* slabel, const char* tlabel )
 	}
 	// O( log( rozmiar podsieci nt ) )
 	remove_link_between_nodes( nt, graph_it_s, graph_it_t );
-}
-
-
-net_id test(){
-	cout << __FILE__ << " " << __LINE__ << " " << __TIME__ << " " << __DATE__ << endl;
-	return 123;
 }
 
 // funkcje podstawowe
