@@ -8,7 +8,14 @@
 
 #include <assert.h>
 
+
 using namespace std;
+
+#ifndef NDEBUG
+    const bool debug = true;
+#else
+    const bool debug = false;
+#endif //i do sprawdzania czy debug mode uzywaj if( debug [& ...] ) {[...]}
 
 typedef unsigned long net_id;
 typedef const char* node_label;
@@ -28,6 +35,18 @@ typedef tuple <bool, int, graph> net;
 typedef map <net_id, net> network;
 network nw;
 network::iterator nw_it;
+
+// funkcje deweloperskie
+// wypisuje cala siec
+#define debon 1
+#define deb(burak) if(debon) {cout<<"DEB-> "<<#burak<<": "<<burak<<endl;}
+#define debv(burak) if(debon) {cout<<"DEB-> "<<#burak<<": \t"; for(unsigned int zyx=0;zyx<burak.size();zyx++) cout<<burak[zyx]<<" "; cout<<endl;}
+#define debt(burak,SIzE) if(debon) {cout<<"DEB-> "<<#burak<<": \t"; for(unsigned int zyx=0;zyx<SIzE;zyx++) cout<<burak[zyx]<<" "; cout<<endl;}
+#define debend if(debon) {cout<<"_____________________"<<endl;}
+#define memcheck if(debon) {FILE *fp = fopen("/proc/self/status","r");while( !feof(fp) ) putchar(fgetc(fp));}
+
+
+
 
 // funckje pomocnicze (zakladamy poprawnosc argumentow)
 network::iterator get_net( net_id id )
@@ -51,6 +70,7 @@ graph* net_graph( net& nt ) {
 void remove_link_between_nodes( net* nt, graph::iterator node_s, graph::iterator node_t )
 {
 	// pobieramy nazwy wierzcholkow
+
 	const char* slabel = node_s->get_node_label;
 	const char* tlabel = node_t->get_node_label;
 	// pobieramy polaczenia wychodzace z node_s
@@ -163,6 +183,7 @@ void network_add_link(net_id id, const char* slabel, const char* tlabel)
 		return;
 	}
 	graph* g = net_graph( nw_it->get_net );
+	// jesli nie istnial wierzcholek o etykiecie slabel to operator [] tworzy go
 	nodes* out = &( (*g)[ slabel ].get_out_links );
 
 	// sprawdzamy czy krawedz istniala wczesniej
@@ -201,19 +222,22 @@ void network_remove_node(net_id id, const char* label)
 	nodes* in =  &( graph_it_s->get_node_links.get_in_links );
 	// usuwamy polaczenia wychodzace z usuwanego wierzcholka -> (musimy
 	// zaktualizowac polaczenia wchodzace w sasiadach wierzcholka o label)
-
-	for ( nodes_it = out->begin(); nodes_it != out->end(); nodes_it++ ) {
-		node_label t_label = (*nodes_it);
+	while ( !out->empty() ) {
+		node_label t_label = *(out->begin());
 		graph_it_t = g->find( t_label );
 		remove_link_between_nodes( nt, graph_it_s, graph_it_t );
 	}
 	// oraz usuwamy polaczenia odwrotne: wchodzace do wierzcholka o label
 	graph_it_t = graph_it_s;
-	for ( nodes_it = in->begin(); nodes_it != in->end(); nodes_it++ ) {
-		node_label s_label = (*nodes_it);
+	while ( !in->empty() ) {
+		node_label s_label = *(in->begin());
 		graph_it_s = g->find( s_label );
+		//TODO usunac assert
+		assert( graph_it_s != g->end() );
 		remove_link_between_nodes( nt, graph_it_s, graph_it_t );
 	}
+	// po usunieciu polaczen usuwamy wierzcholek
+	g->erase( graph_it_t );
 }
 
 
@@ -271,4 +295,36 @@ size_t network_in_degree(net_id id, const char* label)
 	graph* g = net_graph( nw_it->get_net );
 	nodes* in = &( (*g)[ label ].get_in_links );
 	return in->size();
+}
+
+
+void showtime()
+{
+	cout << "========== WHOLE NETWORK: =============" << endl;
+	for( nw_it = nw.begin(); nw_it != nw.end(); nw_it++ ) {
+		cout << "net id: " << nw_it->get_net_id << endl;
+		net* nt = &( nw_it->get_net );
+		cout << "\t is growing: " << is_growing( *nt ) << endl;
+		cout << "\t links number: " << net_links_number( *nt ) << endl;
+		graph* g = net_graph( *nt );
+		cout << "\t nodes number: " << g->size() << endl;
+		cout << "\t nodes list: " << endl;
+
+		for ( graph_it_s = g->begin(); graph_it_s != g->end(); graph_it_s++ ) {
+			cout << "\t\t " << graph_it_s->get_node_label << ": " << endl;
+			nodes* out = &( graph_it_s->get_node_links.get_out_links );
+			nodes* in = &( graph_it_s->get_node_links.get_in_links );
+			cout << "\t\t\t out: ";
+			for ( nodes_it = out->begin(); nodes_it != out->end(); nodes_it++ ) {
+				cout << (*nodes_it) << " ";
+			}
+			cout << endl << "\t\t\t in: ";
+			for ( nodes_it = in->begin(); nodes_it != in->end(); nodes_it++ ) {
+				cout << (*nodes_it) << " ";
+			}
+			cout << endl;
+		}
+		cout << "-------------------------------------" << endl;
+	}
+
 }
