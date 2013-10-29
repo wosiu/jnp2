@@ -47,15 +47,18 @@ network::iterator get_net( net_id id )
 	return nw.find( id );
 }
 
-bool is_growing( net& nt ) {
+bool is_growing( net& nt )
+{
 	return get<0>(nt);
 }
 
-int& net_links_number( net& nt ) {
+int& net_links_number( net& nt )
+{
 	return get<1>(nt);
 }
 
-graph* net_graph( net& nt ) {
+graph* net_graph( net& nt )
+{
 	return &get<2>(nt);
 }
 
@@ -63,7 +66,6 @@ graph* net_graph( net& nt ) {
 void remove_link_between_nodes( net* nt, graph::iterator node_s, graph::iterator node_t )
 {
 	// pobieramy nazwy wierzcholkow
-
 	const char* slabel = node_s->get_node_label;
 	const char* tlabel = node_t->get_node_label;
 	// pobieramy polaczenia wychodzace z node_s
@@ -174,7 +176,6 @@ void network_add_link(net_id id, const char* slabel, const char* tlabel)
 	graph* g = net_graph( nw_it->get_net );
 	// jesli nie istnial wierzcholek o etykiecie slabel to operator [] tworzy go
 	nodes* out = &( (*g)[ slabel ].get_out_links );
-
 	// sprawdzamy czy krawedz istniala wczesniej
 	if ( out->find( tlabel ) != out->end() ) {
 		return;
