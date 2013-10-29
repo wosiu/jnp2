@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include <tuple>
 // TODO: usunac includy, jak bedzie skonczone i debug bedzie wyrzucony:
-#include <iostream>
+#include <iostream> //zawiera ios_base::Init
 #include <assert.h>
 
 using namespace std;
@@ -29,8 +29,7 @@ typedef tuple <bool, int, graph> net;
 #define get_net_id first
 #define get_net second
 typedef map <net_id, net> network;
-network nw;
-network::iterator nw_it;
+network::iterator network_it;
 
 // makra do debugu - TODO usunac przed wyslaniem
 #define debon 1
@@ -42,9 +41,15 @@ network::iterator nw_it;
 
 
 // funckje pomocnicze (zakladamy poprawnosc argumentow)
+network& get_network()
+{
+	static network nw;
+	return nw;
+}
+
 network::iterator get_net( net_id id )
 {
-	return nw.find( id );
+	return get_network().find( id );
 }
 
 bool is_growing( net& nt )
@@ -110,55 +115,55 @@ void net_remove_link( net* nt, const char* slabel, const char* tlabel )
 net_id network_new( int growing )
 {
 	int id = 1;
-	if ( !nw.empty() ) {
+	if ( !get_network().empty() ) {
 		// pobranie najwiekszego dotychczasowego id i zwiekszenie o 1
-		nw_it = nw.end();
-		nw_it--;
-		id = nw_it->get_net_id + 1;
+		network_it = get_network().end();
+		network_it--;
+		id = network_it->get_net_id + 1;
 	}
 	// wkladanie nowej sieci
-	nw[ id ] = net( ( growing != 0 ), 0, graph() );
+	get_network()[ id ] = net( ( growing != 0 ), 0, graph() );
 	return id;
 }
 
 // O( log( liczba podsieci ) )
 void network_delete( net_id id )
 {
-	nw.erase( id );
+	get_network().erase( id );
 }
 
 // O( log( liczba podsieci ) )
 size_t network_nodes_number( net_id id )
 {
-	nw_it = get_net( id );
-	if ( nw_it == nw.end() ) {
+	network_it = get_net( id );
+	if ( network_it == get_network().end() ) {
 		return 0;
 	}
-	return net_graph( nw_it->get_net )->size();
+	return net_graph( network_it->get_net )->size();
 }
 
 // O( log( liczba podsieci ) )
 size_t network_links_number(net_id id)
 {
-	nw_it = get_net( id );
-	if ( nw_it == nw.end() ) {
+	network_it = get_net( id );
+	if ( network_it == get_network().end() ) {
 		return 0;
 	}
-	return net_links_number( nw_it->get_net );
+	return net_links_number( network_it->get_net );
 }
 
 
 // O( log( liczba podsieci ) + log( rozmiar podsieci o id ) )
 void network_add_node(net_id id, const char* label)
 {
-	nw_it = get_net( id );
-	if ( nw_it == nw.end() ) {
+	network_it = get_net( id );
+	if ( network_it == get_network().end() ) {
 		return;
 	}
 	if ( label == NULL ) {
 		return;
 	}
-	graph* g = net_graph( nw_it->get_net );
+	graph* g = net_graph( network_it->get_net );
 	// operator [] doda node do grafu jesli nie istnial
 	(*g)[ label ];
 }
@@ -169,18 +174,18 @@ void network_add_link(net_id id, const char* slabel, const char* tlabel)
 	if ( slabel == NULL || tlabel == NULL ) {
 		return;
 	}
-	nw_it = get_net( id );
-	if ( nw_it == nw.end() ) {
+	network_it = get_net( id );
+	if ( network_it == get_network().end() ) {
 		return;
 	}
-	graph* g = net_graph( nw_it->get_net );
+	graph* g = net_graph( network_it->get_net );
 	// jesli nie istnial wierzcholek o etykiecie slabel to operator [] tworzy go
 	nodes* out = &( (*g)[ slabel ].get_out_links );
 	// sprawdzamy czy krawedz istniala wczesniej
 	if ( out->find( tlabel ) != out->end() ) {
 		return;
 	}
-	net_links_number( nw_it->get_net )++;
+	net_links_number( network_it->get_net )++;
 	nodes* in = &( (*g)[ tlabel ].get_in_links );
 	out->insert( tlabel );
 	in->insert( slabel );
@@ -192,11 +197,11 @@ void network_add_link(net_id id, const char* slabel, const char* tlabel)
 void network_remove_node(net_id id, const char* label)
 {
 	// O ( log( liczba podsieci ) )
-	nw_it = get_net( id );
-	if ( nw_it == nw.end() ) {
+	network_it = get_net( id );
+	if ( network_it == get_network().end() ) {
 		return;
 	}
-	net* nt = &nw_it->get_net;
+	net* nt = &network_it->get_net;
 	if ( is_growing( *nt ) ) {
 		return;
 	}
@@ -233,11 +238,11 @@ void network_remove_node(net_id id, const char* label)
 
 void network_remove_link(net_id id, const char* slabel, const char* tlabel)
 {
-	nw_it = get_net( id );
-	if ( nw_it == nw.end() ) {
+	network_it = get_net( id );
+	if ( network_it == get_network().end() ) {
 		return;
 	}
-	net* nt = &nw_it->get_net;
+	net* nt = &network_it->get_net;
 	if ( is_growing( *nt ) ) {
 		return;
 	}
@@ -247,14 +252,14 @@ void network_remove_link(net_id id, const char* slabel, const char* tlabel)
 // O( log( liczba podsieci ) )
 void network_clear(net_id id)
 {
-	nw_it = get_net( id );
-	if ( nw_it == nw.end() ) {
+	network_it = get_net( id );
+	if ( network_it == get_network().end() ) {
 		return;
 	}
-	if ( is_growing( nw_it->get_net ) ) {
+	if ( is_growing( network_it->get_net ) ) {
 		return;
 	}
-	nw_it->get_net = net( 0, 0, graph() );
+	network_it->get_net = net( 0, 0, graph() );
 }
 
 // O( log( liczba podsieci ) + log( rozmiar podsieci o id ) )
@@ -263,11 +268,11 @@ size_t network_out_degree(net_id id, const char* label)
 	if ( label == NULL ) {
 		return 0;
 	}
-	nw_it = get_net( id );
-	if ( nw_it == nw.end() ) {
+	network_it = get_net( id );
+	if ( network_it == get_network().end() ) {
 		return 0;
 	}
-	graph* g = net_graph( nw_it->get_net );
+	graph* g = net_graph( network_it->get_net );
 	graph::iterator graph_it_s, graph_it_t;
 	graph_it_s = g->find( label );
 	if ( graph_it_s == g->end() ) {
@@ -283,11 +288,11 @@ size_t network_in_degree(net_id id, const char* label)
 	if ( label == NULL ) {
 		return 0;
 	}
-	nw_it = get_net( id );
-	if ( nw_it == nw.end() ) {
+	network_it = get_net( id );
+	if ( network_it == get_network().end() ) {
 		return 0;
 	}
-	graph* g = net_graph( nw_it->get_net );
+	graph* g = net_graph( network_it->get_net );
 	graph::iterator graph_it_s, graph_it_t;
 	graph_it_s = g->find( label );
 	if ( graph_it_s == g->end() ) {
@@ -301,9 +306,9 @@ size_t network_in_degree(net_id id, const char* label)
 void showtime()
 {
 	cout << "========== WHOLE NETWORK: =============" << endl;
-	for( nw_it = nw.begin(); nw_it != nw.end(); nw_it++ ) {
-		cout << "net id: " << nw_it->get_net_id << endl;
-		net* nt = &( nw_it->get_net );
+	for( network_it = get_network().begin(); network_it != get_network().end(); network_it++ ) {
+		cout << "net id: " << network_it->get_net_id << endl;
+		net* nt = &( network_it->get_net );
 		cout << "\t is growing: " << is_growing( *nt ) << endl;
 		cout << "\t links number: " << net_links_number( *nt ) << endl;
 		graph* g = net_graph( *nt );
