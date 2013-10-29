@@ -7,7 +7,6 @@
 #include <iostream>
 #include <assert.h>
 
-
 using namespace std;
 
 #ifndef NDEBUG
@@ -19,14 +18,12 @@ using namespace std;
 typedef unsigned long net_id;
 typedef const char* node_label;
 typedef unordered_set <node_label> nodes;
-unordered_set <node_label>::iterator nodes_it;
 #define get_in_links first
 #define get_out_links second
 typedef pair <nodes, nodes> links;
 #define get_node_label first
 #define get_node_links second
 typedef unordered_map <node_label, links> graph;
-graph::iterator graph_it_s, graph_it_t;
 //0: is_growing, 1: total_links_number, 2: graph
 typedef tuple <bool, int, graph> net;
 #define get_net_id first
@@ -35,8 +32,7 @@ typedef map <net_id, net> network;
 network nw;
 network::iterator nw_it;
 
-// funkcje deweloperskie
-// wypisuje cala siec
+// makra do debugu - TODO usunac przed wyslaniem
 #define debon 1
 #define deb(burak) if(debon) {cout<<"DEB-> "<<#burak<<": "<<burak<<endl;}
 #define debv(burak) if(debon) {cout<<"DEB-> "<<#burak<<": \t"; for(unsigned int zyx=0;zyx<burak.size();zyx++) cout<<burak[zyx]<<" "; cout<<endl;}
@@ -93,6 +89,7 @@ void remove_link_between_nodes( net* nt, graph::iterator node_s, graph::iterator
 void net_remove_link( net* nt, const char* slabel, const char* tlabel )
 {
 	graph* g = net_graph( *nt );
+	graph::iterator graph_it_s, graph_it_t;
 	// znajdujemy w grafie wierzcholki o etykietach slabel i tlabel
 	//O( 2 log (rozmiar sieci nt) )
 	graph_it_s = g->find( slabel );
@@ -202,7 +199,7 @@ void network_remove_node(net_id id, const char* label)
 		return;
 	}
 	graph* g = net_graph( *nt );
-
+	graph::iterator graph_it_s, graph_it_t;
 	// O ( log n ), gdzie n = rozmiar podsieci o id
 	// szukamy w grafie wierzcholka o label
 	graph_it_s = g->find( label );
@@ -269,6 +266,7 @@ size_t network_out_degree(net_id id, const char* label)
 		return 0;
 	}
 	graph* g = net_graph( nw_it->get_net );
+	graph::iterator graph_it_s, graph_it_t;
 	graph_it_s = g->find( label );
 	if ( graph_it_s == g->end() ) {
 		return 0;
@@ -288,6 +286,7 @@ size_t network_in_degree(net_id id, const char* label)
 		return 0;
 	}
 	graph* g = net_graph( nw_it->get_net );
+	graph::iterator graph_it_s, graph_it_t;
 	graph_it_s = g->find( label );
 	if ( graph_it_s == g->end() ) {
 		return 0;
@@ -296,7 +295,7 @@ size_t network_in_degree(net_id id, const char* label)
 	return in->size();
 }
 
-
+// wypisuje caly network - TODO usunac przed wyslaniem
 void showtime()
 {
 	cout << "========== WHOLE NETWORK: =============" << endl;
@@ -309,6 +308,8 @@ void showtime()
 		cout << "\t nodes number: " << g->size() << endl;
 		cout << "\t nodes list: " << endl;
 
+		graph::iterator graph_it_s;
+		unordered_set <node_label>::iterator nodes_it;
 		for ( graph_it_s = g->begin(); graph_it_s != g->end(); graph_it_s++ ) {
 			cout << "\t\t " << graph_it_s->get_node_label << ": " << endl;
 			nodes* out = &( graph_it_s->get_node_links.get_out_links );
