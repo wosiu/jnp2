@@ -64,6 +64,66 @@ int main()
     assert(network_out_degree(n, "Kabaty") == 1);
     assert(network_in_degree(n, "Kabaty") == 1);
 
+
+	//dodanie drugiej sieci
+  	unsigned long m;
+	m = network_new(1);
+
+	network_add_link(m, "Kabaty", "Natolin");
+    assert(network_nodes_number(m) == 2);
+    assert(network_links_number(m) == 1);
+    assert(network_out_degree(m, "Kabaty") == 1);
+    assert(network_in_degree(m, "Kabaty") == 0);
+    assert(network_out_degree(m, "Natolin") == 0);
+    assert(network_in_degree(m, "Natolin") == 1);
+
+    network_add_link(m, "Natolin", "Imielin");
+    assert(network_nodes_number(m) == 3);
+    assert(network_links_number(m) == 2);
+    assert(network_out_degree(m, "Natolin") == 1);
+    assert(network_in_degree(m, "Natolin") == 1);
+    assert(network_out_degree(m, "Imielin") == 0);
+    assert(network_in_degree(m, "Imielin") == 1);
+
+    network_add_link(m, "Imielin", "Stokłosy");
+    assert(network_nodes_number(m) == 4);
+    assert(network_links_number(m) == 3);
+    assert(network_out_degree(m, "Imielin") == 1);
+    assert(network_in_degree(m, "Imielin") == 1);
+    assert(network_out_degree(m, "Stokłosy") == 0);
+    assert(network_in_degree(m, "Stokłosy") == 1);
+
+    network_remove_link(m, "Kabaty", "Natolin");
+    assert(network_nodes_number(m) == 4);
+    assert(network_links_number(m) == 3);
+    assert(network_out_degree(m, "Imielin") == 1);
+    assert(network_in_degree(m, "Imielin") == 1);
+    assert(network_out_degree(m, "Stokłosy") == 0);
+    assert(network_in_degree(m, "Stokłosy") == 1);
+
+    network_remove_node(m, "Imielin");
+    assert(network_nodes_number(m) == 4);
+    assert(network_links_number(m) == 3);
+    assert(network_out_degree(m, "Kabaty") == 1);
+    assert(network_in_degree(m, "Kabaty") == 0);
+    assert(network_out_degree(m, "Natolin") == 1);
+    assert(network_in_degree(m, "Natolin") == 1);
+    assert(network_out_degree(m, "Stokłosy") == 0);
+    assert(network_in_degree(m, "Stokłosy") == 1);
+
+    network_add_node(m, "Imielin");
+    assert(network_nodes_number(m) == 4);
+    assert(network_links_number(m) == 3);
+    assert(network_out_degree(m, "Imielin") == 1);
+    assert(network_in_degree(m, "Imielin") == 1);
+
+    network_add_link(m, "Kabaty", "Kabaty");
+    assert(network_nodes_number(m) == 4);
+    assert(network_links_number(m) == 4);
+    assert(network_out_degree(m, "Kabaty") == 2);
+    assert(network_in_degree(m, "Kabaty") == 1);
+
+
 	//sprawdzanie wyczyszczonej
     network_clear(n);
     assert(network_nodes_number(n) == 0);
@@ -145,8 +205,6 @@ int main()
 	assert(network_nodes_number(n) == 5);
     assert(network_links_number(n) == 2);
 
-	//dodanie drugiej sieci
-	//TODO
 
 	//sprawdzanie usunietej
 	network_delete(n);

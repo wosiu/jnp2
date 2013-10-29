@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <tuple>
-
+// TODO: usunac includy, jak bedzie skonczone i debug bedzie wyrzucony:
 #include <iostream>
 #include <assert.h>
 
@@ -91,7 +91,7 @@ void net_remove_link( net* nt, const char* slabel, const char* tlabel )
 	graph* g = net_graph( *nt );
 	graph::iterator graph_it_s, graph_it_t;
 	// znajdujemy w grafie wierzcholki o etykietach slabel i tlabel
-	//O( 2 log (rozmiar sieci nt) )
+	// O( 2 log (rozmiar sieci nt) )
 	graph_it_s = g->find( slabel );
 	graph_it_t = g->find( tlabel );
 	// jesli ktoregos nie znaleziono, to nie ma co usuwac
@@ -103,6 +103,7 @@ void net_remove_link( net* nt, const char* slabel, const char* tlabel )
 }
 
 // funkcje podstawowe
+
 // O( log( liczba podsieci ) )
 net_id network_new( int growing )
 {
