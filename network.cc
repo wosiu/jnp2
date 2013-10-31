@@ -16,7 +16,7 @@ using namespace std;
 #endif //i do sprawdzania czy debug mode uzywaj if( debug [& ...] ) {[...]}
 
 typedef unsigned long net_id;
-typedef const char* node_label;
+typedef string node_label;
 typedef unordered_set <node_label> nodes;
 #define get_in_links first
 #define get_out_links second
@@ -73,13 +73,13 @@ void remove_link_between_nodes( net* nt, graph::iterator node_s, graph::iterator
 	if(debug)
 		cerr << "remove_link_between_nodes(...)\n";
 	// pobieramy nazwy wierzcholkow
-	const char* slabel = node_s->get_node_label;
-	const char* tlabel = node_t->get_node_label;
-	if(slabel == NULL || tlabel == NULL) {
+	node_label slabel = node_s->get_node_label;
+	node_label tlabel = node_t->get_node_label;
+	if(slabel.empty() || tlabel.empty()) {
 		if(debug) {
-			if(slabel == NULL)
+			if(slabel.empty())
 				cerr << "remove_link_between_nodes: slabel is null\n";
-			if(tlabel == NULL)
+			if(tlabel.empty())
 				cerr << "remove_link_between_nodes: tlabel is null\n";
 		}
 		return;
@@ -101,7 +101,8 @@ void remove_link_between_nodes( net* nt, graph::iterator node_s, graph::iterator
 	// analogicznie w druga strone (slabel z in links tlabel),
 	// przy czym tu mamy pewnosc, ze tlabel ma w in links slabel
 	// TODO: usunac assert
-	assert( in->erase( slabel ) != 0 );
+	//assert( in->erase( slabel ) != 0 );
+	in->erase(slabel);
 	//zmniejszamy ilosc polaczen w tej sieci
 	net_links_number( *nt )--;
 	if(debug)
@@ -109,10 +110,14 @@ void remove_link_between_nodes( net* nt, graph::iterator node_s, graph::iterator
 }
 
 // O( log( rozmiar podsieci nt ) )
-void net_remove_link( net* nt, const char* slabel, const char* tlabel )
+void net_remove_link( net* nt, const char* slabel_, const char* tlabel_ )
 {
 	if(debug)
 		cerr << "net_remove_link(...)\n";
+	
+	node_label slabel = slabel_ == NULL ? "" : slabel_;
+	node_label tlabel = tlabel_ == NULL ? "" : tlabel_;
+	
 	graph* g = net_graph( *nt );
 	graph::iterator graph_it_s, graph_it_t;
 	// znajdujemy w grafie wierzcholki o etykietach slabel i tlabel
@@ -207,17 +212,20 @@ size_t network_links_number(net_id id)
 
 
 // O( log( liczba podsieci ) + log( rozmiar podsieci o id ) )
-void network_add_node(net_id id, const char* label)
+void network_add_node(net_id id, const char* label_)
 {
 	if(debug)
-		cerr << "network_add_node(" << id << ", " << label << ")\n";
+		cerr << "network_add_node(" << id << ", " << label_ << ")\n";
+	
+	node_label label = label_ == NULL ? "" : label_;
+	
 	network_it = get_net( id );
 	if ( network_it == get_network().end() ) {
 		if(debug)
 			cerr << "network_add_node: network doesn't exist, nothing to do here\n";
 		return;
 	}
-	if ( label == NULL ) {
+	if ( label.empty() ) {
 		if(debug)
 			cerr << "network_add_node: label is empty\n";
 		return;
@@ -234,15 +242,19 @@ void network_add_node(net_id id, const char* label)
 }
 
 // O( log( liczba podsieci ) + log( rozmiar podsieci o id ) )
-void network_add_link(net_id id, const char* slabel, const char* tlabel)
+void network_add_link(net_id id, const char* slabel_, const char* tlabel_)
 {
 	if(debug)
-		cerr << "network_add_link(" << id << ", " << slabel << ", " << tlabel << ")\n";
-	if ( slabel == NULL || tlabel == NULL ) {
+		cerr << "network_add_link(" << id << ", " << slabel_ << ", " << tlabel_ << ")\n";
+	
+	node_label slabel = slabel_ == NULL ? "" : slabel_;
+	node_label tlabel = tlabel_ == NULL ? "" : tlabel_;
+	
+	if ( slabel.empty() || tlabel.empty() ) {
 		if(debug) {
-			if(slabel == NULL)
+			if(slabel.empty())
 				cerr << "network_add_link: slabel is null, nothing to do here\n";
-			if(tlabel == NULL)
+			if(tlabel.empty())
 				cerr << "network_add_link: tlabel is null, nothing to do here\n";
 		}
 		return;
@@ -253,30 +265,36 @@ void network_add_link(net_id id, const char* slabel, const char* tlabel)
 			cerr << "network_add_link: network " << id << " doesn't exist, nothing to do here\n";
 		return;
 	}
-	graph* g = net_graph( network_it->get_net );
+	graph &g = *(net_graph( network_it->get_net ));
 	// jesli nie istnial wierzcholek o etykiecie slabel to operator [] tworzy go
-	nodes* out = &( (*g)[ slabel ].get_out_links );
+	nodes &out = ( (g)[ slabel ].get_out_links );
+
 	// sprawdzamy czy krawedz istniala wczesniej
-	if ( out->find( tlabel ) != out->end() ) {
+	if (out.find( tlabel ) != out.end() ) {
 		if(debug)
-			cerr << "network_add_link: link " << slabel << " -> " << tlabel << " in network " << id << "already exists, nothing to do here\n";
+			cerr << "network_add_link: link " << slabel << " -> " << tlabel <<
+			" in network " << id << " already exists, nothing to do here\n";
 		return;
 	}
 	net_links_number( network_it->get_net )++;
-	nodes* in = &( (*g)[ tlabel ].get_in_links );
-	out->insert( tlabel );
-	in->insert( slabel );
+	nodes &in = ( (g)[ tlabel ].get_in_links );
+	out.insert( tlabel );
+	in.insert( slabel );
 	if(debug)
 		cerr << "network_add_link: node " << slabel << " -> " << tlabel << " was added to network " << id << "\n";
+
 }
 
 // O ( log( liczba podsieci ) + l log n ), gdzie
 // n = rozmiar podsieci o id,
 // l = ilosc krawedzi wchodzacych i wychodzacych do wierzcholka o label
-void network_remove_node(net_id id, const char* label)
+void network_remove_node(net_id id, const char* label_)
 {
 	if(debug)
-		cerr << "network_remove_node(" << id << ", " << label << ")\n";
+		cerr << "network_remove_node(" << id << ", " << label_ << ")\n";
+	
+	node_label label = label_ == NULL ? "" : label_;
+	
 	// O ( log( liczba podsieci ) )
 	network_it = get_net( id );
 	if ( network_it == get_network().end() ) {
@@ -329,10 +347,14 @@ void network_remove_node(net_id id, const char* label)
 }
 
 
-void network_remove_link(net_id id, const char* slabel, const char* tlabel)
+void network_remove_link(net_id id, const char* slabel_, const char* tlabel_)
 {
 	if(debug)
-		cerr << "network_remove_link(" << id << ", " << slabel << ", " << tlabel << ")\n";
+		cerr << "network_remove_link(" << id << ", " << slabel_ << ", " << tlabel_ << ")\n";
+	
+	node_label slabel = slabel_ == NULL ? "" : slabel_;
+	node_label tlabel = tlabel_ == NULL ? "" : tlabel_;
+	
 	network_it = get_net( id );
 	if ( network_it == get_network().end() ) {
 		if(debug)
@@ -345,8 +367,9 @@ void network_remove_link(net_id id, const char* slabel, const char* tlabel)
 			cerr << "network_remove_link: network " << id << " is growing, can't remove link, returning\n";
 		return;
 	}
-	net_remove_link( nt, slabel, tlabel );
-	cerr << "network_remove_link: link " << slabel << " -> " << tlabel << " in network " << id << " removed\n";
+	net_remove_link( nt, slabel.c_str(), tlabel.c_str() );
+	if(debug)
+		cerr << "network_remove_link: link " << slabel << " -> " << tlabel << " in network " << id << " removed\n";
 }
 
 // O( log( liczba podsieci ) )
@@ -371,13 +394,16 @@ void network_clear(net_id id)
 }
 
 // O( log( liczba podsieci ) + log( rozmiar podsieci o id ) )
-size_t network_out_degree(net_id id, const char* label)
+size_t network_out_degree(net_id id, const char* label_)
 {
 	if(debug)
-		cerr << "network_out_degree(" << id << ", " << label << ")\n";
-	if ( label == NULL ) {
+		cerr << "network_out_degree(" << id << ", " << label_ << ")\n";
+	
+	node_label label = label_ == NULL ? "" : label_;
+	
+	if ( label.empty() ) {
 		if(debug)
-			cerr << "network_out_degree: label is null\n";
+			cerr << "network_out_degree: label is null, returning 0\n";
 		return 0;
 	}
 	network_it = get_net( id );
@@ -401,11 +427,14 @@ size_t network_out_degree(net_id id, const char* label)
 }
 
 // O( log( liczba podsieci ) + log( rozmiar podsieci o id ) )
-size_t network_in_degree(net_id id, const char* label)
+size_t network_in_degree(net_id id, const char* label_)
 {
 	if(debug)
-		cerr << "network_in_degree(" << id << ", " << label << ")\n";
-	if ( label == NULL ) {
+		cerr << "network_in_degree(" << id << ", " << label_ << ")\n";
+	
+	node_label label = label_ == NULL ? "" : label_;
+	
+	if ( label.empty() ) {
 		if(debug)
 			cerr << "network_in_degree: label is null, returning 0\n";
 		return 0;
