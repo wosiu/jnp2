@@ -11,7 +11,7 @@ using namespace std;
     const bool debug = true;
 #else
     const bool debug = false;
-#endif //i do sprawdzania czy debug mode uzywaj if( debug [& ...] ) {[...]}
+#endif
 
 typedef unsigned long net_id;
 typedef string node_label;
