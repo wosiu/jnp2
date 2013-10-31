@@ -389,7 +389,7 @@ void network_remove_link( net_id id, const char* slabel_, const char* tlabel_ )
 	net* nt = &get_net( network_it );
 	if ( is_growing( *nt ) ) {
 		if ( debug )
-			cerr << "network_remove_link: network " << id << " is growing, can't remove link, returning\n";
+			cerr << "network_remove_link: network " << id << " is growing, can't remove link, exiting\n";
 		return;
 	}
 	net_remove_link( nt, slabel.c_str(), tlabel.c_str() );
