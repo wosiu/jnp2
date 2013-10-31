@@ -15,7 +15,7 @@ using namespace std;
 
 typedef unsigned long net_id;
 typedef string node_label;
-typedef unordered_set <node_label> nodes;
+typedef unordered_set < node_label > nodes;
 // first: in_links, second: out_links
 typedef pair <nodes, nodes> links;
 // first: node_label, second: node_links
@@ -95,25 +95,21 @@ graph* net_graph( network::iterator network_it )
 }
 
 
-// funckje podstawowe
-
 // O( log( rozmiar podsieci nt ) )
-void remove_link_between_nodes( net* nt, graph::iterator node_s, graph::iterator node_t )
+bool remove_link_between_nodes( net* nt, graph::iterator node_s, graph::iterator node_t )
 {
-	if ( debug )
-		cerr << "remove_link_between_nodes(...)\n";
 	// pobieramy nazwy wierzcholkow
 	node_label slabel = get_node_label( node_s );
 	node_label tlabel = get_node_label( node_t );
 	if ( slabel.empty() ) {
 		if ( debug )
 			cerr << "remove_link_between_nodes: slabel is null\n";
-		return;
+		return false;
 	}
 	if ( tlabel.empty() ) {
 		if ( debug )
 			cerr << "remove_link_between_nodes: tlabel is null\n";
-		return;
+		return false;
 	}
 
 	// pobieramy polaczenia wychodzace z node_s
@@ -127,45 +123,15 @@ void remove_link_between_nodes( net* nt, graph::iterator node_s, graph::iterator
 		// z zalozenia ze jest to sytuacja symetryczna
 		if ( debug )
 			cerr << "remove_link_between_nodes: link does not exist\n";
-		return;
+		return false;
 	}
 	// analogicznie w druga strone (slabel z in links tlabel),
 	// przy czym tu mamy pewnosc, ze tlabel ma w in links slabel
 	in->erase( slabel );
 	//zmniejszamy ilosc polaczen w tej sieci
 	net_links_number( *nt )--;
-	if ( debug )
-		cerr << "remove_link_between_nodes: link removed\n";
-}
 
-// O( log( rozmiar podsieci nt ) )
-void net_remove_link( net* nt, const char* slabel_, const char* tlabel_ )
-{
-	if ( debug )
-		cerr << "net_remove_link(...)\n";
-
-	node_label slabel = slabel_ == NULL ? "" : slabel_;
-	node_label tlabel = tlabel_ == NULL ? "" : tlabel_;
-
-	graph* g = net_graph( *nt );
-	graph::iterator graph_it_s, graph_it_t;
-	// znajdujemy w grafie wierzcholki o etykietach slabel i tlabel
-	// O( 2 log (rozmiar sieci nt) )
-	graph_it_s = g->find( slabel );
-	graph_it_t = g->find( tlabel );
-	// jesli ktoregos nie znaleziono, to nie ma co usuwac
-	if ( graph_it_s == g->end() ) {
-		if ( debug )
-			cerr << "net_remove_link: can't find label " << slabel << "\n";
-		return;
-	}
-	if ( graph_it_t == g->end() ) {
-		if ( debug )
-			cerr << "net_remove_link: can't find label " << tlabel << "\n";
-		return;
-	}
-	// O( log( rozmiar podsieci nt ) )
-	remove_link_between_nodes( nt, graph_it_s, graph_it_t );
+	return true;
 }
 
 // funkcje podstawowe
@@ -354,7 +320,8 @@ void network_remove_node( net_id id, const char* label_ )
 		graph_it_t = g->find( t_label );
 		if ( debug )
 			cerr << "network_remove_node: removing link " << label << " -> " << t_label << "\n";
-		remove_link_between_nodes( nt, graph_it_s, graph_it_t );
+		if( remove_link_between_nodes( nt, graph_it_s, graph_it_t ) && debug )
+			cerr << "network_remove_node: link " << label << " -> " << t_label << " removed\n";
 	}
 	// oraz usuwamy polaczenia odwrotne: wchodzace do wierzcholka o label
 	graph_it_t = graph_it_s;
@@ -363,7 +330,8 @@ void network_remove_node( net_id id, const char* label_ )
 		graph_it_s = g->find( s_label );
 		if ( debug )
 			cerr << "network_remove_node: removing link " << s_label << " -> " << label << "\n";
-		remove_link_between_nodes( nt, graph_it_s, graph_it_t );
+		if ( remove_link_between_nodes( nt, graph_it_s, graph_it_t ) && debug )
+			cerr << "network_remove_node: link " << s_label << " -> " << label << " removed\n";
 	}
 	// po usunieciu polaczen usuwamy wierzcholek
 	g->erase( graph_it_t );
@@ -392,7 +360,29 @@ void network_remove_link( net_id id, const char* slabel_, const char* tlabel_ )
 			cerr << "network_remove_link: network " << id << " is growing, can't remove link, exiting\n";
 		return;
 	}
-	net_remove_link( nt, slabel.c_str(), tlabel.c_str() );
+
+	graph* g = net_graph( *nt );
+	graph::iterator graph_it_s, graph_it_t;
+	// znajdujemy w grafie wierzcholki o etykietach slabel i tlabel
+	// O( 2 log (rozmiar sieci nt) )
+	graph_it_s = g->find( slabel );
+	graph_it_t = g->find( tlabel );
+	// jesli ktoregos nie znaleziono, to nie ma co usuwac
+	if ( graph_it_s == g->end() ) {
+		if ( debug )
+			cerr << "net_remove_link: can't find label " << slabel << "\n";
+		return;
+	}
+	if ( graph_it_t == g->end() ) {
+		if ( debug )
+			cerr << "net_remove_link: can't find label " << tlabel << "\n";
+		return;
+	}
+	// O( log( rozmiar podsieci nt ) )
+	if ( !remove_link_between_nodes( nt, graph_it_s, graph_it_t ) ) {
+		return;
+	}
+
 	if ( debug )
 		cerr << "network_remove_link: link " << slabel << " -> " << tlabel << " in network " << id << " removed\n";
 }
