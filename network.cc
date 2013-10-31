@@ -105,13 +105,14 @@ void remove_link_between_nodes( net* nt, graph::iterator node_s, graph::iterator
 	// pobieramy nazwy wierzcholkow
 	node_label slabel = get_node_label( node_s );
 	node_label tlabel = get_node_label( node_t );
-	if(slabel.empty() || tlabel.empty()) {
-		if ( debug ) {
-			if(slabel.empty())
-				cerr << "remove_link_between_nodes: slabel is null\n";
-			if(tlabel.empty())
-				cerr << "remove_link_between_nodes: tlabel is null\n";
-		}
+	if ( slabel.empty() ) {
+		if ( debug )
+			cerr << "remove_link_between_nodes: slabel is null\n";
+		return;
+	}
+	if ( tlabel.empty() ) {
+		if ( debug )
+			cerr << "remove_link_between_nodes: tlabel is null\n";
 		return;
 	}
 
@@ -125,7 +126,7 @@ void remove_link_between_nodes( net* nt, graph::iterator node_s, graph::iterator
 		// jesli nie mial polaczenia, to w tlabel nie ma tez wchodzacego
 		// z zalozenia ze jest to sytuacja symetryczna
 		if ( debug )
-			cerr << "remove_link_between_nodes: link didn't exist\n";
+			cerr << "remove_link_between_nodes: link does not exist\n";
 		return;
 	}
 	// analogicznie w druga strone (slabel z in links tlabel),
@@ -153,13 +154,14 @@ void net_remove_link( net* nt, const char* slabel_, const char* tlabel_ )
 	graph_it_s = g->find( slabel );
 	graph_it_t = g->find( tlabel );
 	// jesli ktoregos nie znaleziono, to nie ma co usuwac
-	if ( graph_it_s == g->end() || graph_it_t == g->end() ) {
-		if ( debug ) {
-			if(graph_it_s == g->end())
-				cerr << "net_remove_link: can't find label " << slabel << "\n";
-			if(graph_it_t == g->end())
-				cerr << "net_remove_link: can't find label " << tlabel << "\n";
-		}
+	if ( graph_it_s == g->end() ) {
+		if ( debug )
+			cerr << "net_remove_link: can't find label " << slabel << "\n";
+		return;
+	}
+	if ( graph_it_t == g->end() ) {
+		if ( debug )
+			cerr << "net_remove_link: can't find label " << tlabel << "\n";
 		return;
 	}
 	// O( log( rozmiar podsieci nt ) )
@@ -172,11 +174,7 @@ void net_remove_link( net* nt, const char* slabel_, const char* tlabel_ )
 net_id network_new( int growing )
 {
 	if ( debug )
-	{
 		cerr << "network_new(" << growing << ")\n";
-		if(growing != 0 && growing != 1)
-			cerr << "network_new: first argument of network_new needs to be 0 or 1\n";
-	}
 
 	int id = 1;
 	network::iterator network_it;
@@ -197,12 +195,12 @@ net_id network_new( int growing )
 void network_delete( net_id id )
 {
 	if ( debug )
-	{
 		cerr << "network_delete(" << id << ")\n";
-		if(get_network().find(id) == get_network().end())
-			cerr << "network_delete: network " << id << " doesn't exist, nothing to do here\n";
+
+	if ( get_network().erase( id ) == 0 && debug ) {
+		cerr << "network_delete: network " << id << " doesn't exist, nothing to do here\n";
+		return;
 	}
-	get_network().erase( id );
 	if ( debug )
 		cerr << "network_delete: network " << id << " was deleted\n";
 }
@@ -224,7 +222,7 @@ size_t network_nodes_number( net_id id )
 }
 
 // O( log( liczba podsieci ) )
-size_t network_links_number(net_id id)
+size_t network_links_number( net_id id )
 {
 	if ( debug )
 		cerr << "network_links_number(" << id << ")\n";
@@ -241,7 +239,7 @@ size_t network_links_number(net_id id)
 
 
 // O( log( liczba podsieci ) + log( rozmiar podsieci o id ) )
-void network_add_node(net_id id, const char* label_)
+void network_add_node( net_id id, const char* label_ )
 {
 	if ( debug )
 		cerr << "network_add_node(" << id << ", " << label_ << ")\n";
@@ -271,7 +269,7 @@ void network_add_node(net_id id, const char* label_)
 }
 
 // O( log( liczba podsieci ) + log( rozmiar podsieci o id ) )
-void network_add_link(net_id id, const char* slabel_, const char* tlabel_)
+void network_add_link( net_id id, const char* slabel_, const char* tlabel_ )
 {
 	if ( debug )
 		cerr << "network_add_link(" << id << ", " << slabel_ << ", " << tlabel_ << ")\n";
@@ -317,7 +315,7 @@ void network_add_link(net_id id, const char* slabel_, const char* tlabel_)
 // O ( log( liczba podsieci ) + l log n ), gdzie
 // n = rozmiar podsieci o id,
 // l = ilosc krawedzi wchodzacych i wychodzacych do wierzcholka o label
-void network_remove_node(net_id id, const char* label_)
+void network_remove_node( net_id id, const char* label_ )
 {
 	if ( debug )
 		cerr << "network_remove_node(" << id << ", " << label_ << ")\n";
@@ -352,7 +350,7 @@ void network_remove_node(net_id id, const char* label_)
 	// usuwamy polaczenia wychodzace z usuwanego wierzcholka -> (musimy
 	// zaktualizowac polaczenia wchodzace w sasiadach wierzcholka o label)
 	while ( !out->empty() ) {
-		node_label t_label = *(out->begin());
+		node_label t_label = *( out->begin() );
 		graph_it_t = g->find( t_label );
 		if ( debug )
 			cerr << "network_remove_node: removing link " << label << " -> " << t_label << "\n";
@@ -361,7 +359,7 @@ void network_remove_node(net_id id, const char* label_)
 	// oraz usuwamy polaczenia odwrotne: wchodzace do wierzcholka o label
 	graph_it_t = graph_it_s;
 	while ( !in->empty() ) {
-		node_label s_label = *(in->begin());
+		node_label s_label = *( in->begin() );
 		graph_it_s = g->find( s_label );
 		if ( debug )
 			cerr << "network_remove_node: removing link " << s_label << " -> " << label << "\n";
@@ -374,7 +372,7 @@ void network_remove_node(net_id id, const char* label_)
 }
 
 
-void network_remove_link(net_id id, const char* slabel_, const char* tlabel_)
+void network_remove_link( net_id id, const char* slabel_, const char* tlabel_ )
 {
 	if ( debug )
 		cerr << "network_remove_link(" << id << ", " << slabel_ << ", " << tlabel_ << ")\n";
@@ -400,7 +398,7 @@ void network_remove_link(net_id id, const char* slabel_, const char* tlabel_)
 }
 
 // O( log( liczba podsieci ) )
-void network_clear(net_id id)
+void network_clear( net_id id )
 {
 	if ( debug )
 		cerr << "network_clear(" << id << ")\n";
@@ -421,7 +419,7 @@ void network_clear(net_id id)
 }
 
 // O( log( liczba podsieci ) + log( rozmiar podsieci o id ) )
-size_t network_out_degree(net_id id, const char* label_)
+size_t network_out_degree( net_id id, const char* label_ )
 {
 	if ( debug )
 		cerr << "network_out_degree(" << id << ", " << label_ << ")\n";
@@ -454,7 +452,7 @@ size_t network_out_degree(net_id id, const char* label_)
 }
 
 // O( log( liczba podsieci ) + log( rozmiar podsieci o id ) )
-size_t network_in_degree(net_id id, const char* label_)
+size_t network_in_degree( net_id id, const char* label_ )
 {
 	if ( debug )
 		cerr << "network_in_degree(" << id << ", " << label_ << ")\n";
